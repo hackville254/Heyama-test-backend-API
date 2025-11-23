@@ -1,12 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { ObjectDoc } from './schemas/object.schema';
+import { ObjectsGateway } from './objects.gateway';
 
 // Service encapsulating business logic around Objects collection
 @Injectable()
 export class ObjectsService {
   constructor(
     @Inject('OBJECT_MODEL') private readonly objectModel: Model<ObjectDoc>,
+    private readonly gateway: ObjectsGateway,
   ) {}
 
   // Creates and persists a new Object document
@@ -20,7 +22,15 @@ export class ObjectsService {
       description: params.description,
       imageUrl: params.imageUrl,
     });
-    return created.save();
+    const saved = await created.save();
+    this.gateway.emitObjectCreated({
+      id: saved._id.toString(),
+      title: saved.title,
+      description: saved.description,
+      imageUrl: saved.imageUrl,
+      createdAt: saved.createdAt,
+    });
+    return saved;
   }
 
   // Returns all Object documents
@@ -35,6 +45,10 @@ export class ObjectsService {
 
   // Removes a single Object document by id
   async remove(id: string): Promise<ObjectDoc | null> {
-    return this.objectModel.findByIdAndDelete(id).exec();
+    const removed = await this.objectModel.findByIdAndDelete(id).exec();
+    if (removed) {
+      this.gateway.emitObjectDeleted(id);
+    }
+    return removed;
   }
 }

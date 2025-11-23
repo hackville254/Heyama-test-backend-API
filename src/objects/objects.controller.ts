@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, NotFoundException } from '@nestjs/common';
 import { ObjectsService } from './objects.service';
 import { CreateObjectDto } from './dto/create-object.dto';
+import { UploadUrlDto } from './dto/upload-url.dto';
 import { S3Service } from '../s3/s3.service';
 
 // Controller exposing REST endpoints for managing Objects
@@ -46,13 +47,7 @@ export class ObjectsController {
 
   // Generates a presigned URL to upload an image directly to S3
   @Post('upload-url')
-  async uploadUrl(
-    @Body()
-    body: {
-      filename: string;
-      contentType: string;
-    },
-  ) {
+  async uploadUrl(@Body() body: UploadUrlDto) {
     const sanitizedName = body.filename.replace(/[^a-zA-Z0-9_.-]/g, '_');
     const timestamp = Date.now();
     const key = `objects/${timestamp}-${sanitizedName}`;

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, NotFoundException } from '@nestjs/common';
 import { ObjectsService } from './objects.service';
 import { CreateObjectDto } from './dto/create-object.dto';
 import { S3Service } from '../s3/s3.service';
@@ -27,14 +27,17 @@ export class ObjectsController {
   // Returns a single Object by its id
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.objectsService.findOne(id);
+    const doc = await this.objectsService.findOne(id);
+    if (!doc) throw new NotFoundException('Object not found');
+    return doc;
   }
 
   // Removes an Object from MongoDB and deletes its image from S3
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const removed = await this.objectsService.remove(id);
-    if (removed?.imageUrl) {
+    if (!removed) throw new NotFoundException('Object not found');
+    if (removed.imageUrl) {
       const key = this.s3Service.keyFromUrl(removed.imageUrl);
       await this.s3Service.deleteByKey(key);
     }

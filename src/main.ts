@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -8,18 +9,24 @@ async function bootstrap() {
 
   // Configure Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('Heyama API')
-    .setDescription('API documentation for the Heyama application')
+    .setTitle('Heyama Objects API')
+    .setDescription('REST API to manage Objects with S3 images')
     .setVersion('1.0')
+    .addTag('objects')
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document, { jsonDocumentUrl: 'api-json' });
+
+  // Enable CORS for frontend testing and clients
+  app.enableCors({ origin: true, credentials: true });
+
+  // Global validation for DTOs
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   // Determine the port to listen on, defaulting to 3000 if not set
   const port = Number(process.env.PORT ?? 3000);
 
   try {
-    // Attempt to start the server on the specified port
     await app.listen(port);
     console.log(`Server is running on http://localhost:${port}`);
   } catch (e: unknown) {

@@ -15,8 +15,8 @@ export class S3Service {
 
   constructor() {
     // Initialize S3 client using environment variables (no .env file required)
-    this.region = process.env.AWS_REGION ?? 'us-east-1';
-    this.bucket = process.env.S3_BUCKET_NAME ?? 'your-bucket-name';
+    this.region = process.env.AWS_REGION ?? '';
+    this.bucket = process.env.S3_BUCKET_NAME ?? '';
     this.client = new S3Client({
       region: this.region,
       credentials: {
